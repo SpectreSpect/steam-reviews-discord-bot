@@ -24,17 +24,24 @@ class SteamReviewsNnApi(commands.Cog):
         
         sequences = self.tokenizer.texts_to_sequences([prompt])
         data_to_send = json.dumps({'instances': sequences})
-        model_url = f"http://localhost:8605/v1/models/AAAAAAAAAAAAAAAAAAAAAA:predict"
+        model_url = f"http://localhost:8605/v1/models/steam_reviews:predict"
         predictions = requests.post(model_url, data=data_to_send)
-        return predictions
-
-
+        
+        
+        if 'predictions' not in predictions.json():
+            return "No answer"
+        
+        if predictions.json()['predictions'][0][0] > predictions.json()['predictions'][0][1]:
+            return "```ml\nNegative Review```"
+        else:
+            return "```md\n> Positive review```"
+        
 
     @app_commands.command(name='predict', description="Predicts how you would rank some steam game based on your text.")
     async def preidct(self, interaction: discord.Interaction, prompt: str):
         predictions = self.get_predictions(prompt)
 
-        await interaction.response.send_message(f"Predictions: {predictions}")
+        await interaction.response.send_message(f"{predictions}")
 
 
 async def setup(client: commands.Bot) -> None:  
